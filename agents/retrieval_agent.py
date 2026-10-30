@@ -1,12 +1,29 @@
-from ingestion.vector_store import load_vector_store
+# Performs similarity search against ChromaDB
+from ingestions.vector_store import load_vector_store
 
-def retrieval_agent(question: str):
+
+def retrieval_agent(question):
+
     db = load_vector_store()
-    docs = db.similarity_search(
+
+    results = db.similarity_search_with_score(
         question,
-        k=4
+        k=5
     )
-    context = "\n".join([
-        d.page_content for d in docs
-    ])
-    return context
+
+    context = ""
+
+    citations = []
+
+    for doc, score in results:
+
+        context += doc.page_content + "\n\n"
+
+        citations.append(
+            {
+                "score": round(score, 3),
+                "content": doc.page_content[:200]
+            }
+        )
+
+    return context, citations
